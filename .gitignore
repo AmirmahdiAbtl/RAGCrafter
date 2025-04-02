@@ -1,0 +1,10 @@
+# Ignore environment files
+.env
+
+# Ignore dependencies and logs
+uploads/
+
+
+# Ignore system files
+database.py,
+openapi.yaml
