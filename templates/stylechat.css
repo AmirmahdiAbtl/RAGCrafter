@@ -6,7 +6,7 @@
 
   /* Light theme variables */
   :root {
-    --color-bg: #f5f5f5;
+    --color-bg: #f8f8f8;
     --color-border-btn: #000;
     --color-btn-hover: #ccc;
     --color-text: #333;
@@ -92,7 +92,7 @@
 
   /* New chat button with separate icon and text */
   .new-chat-btn {
-    background-color: transparent;
+    background-color: var(--color-bg);
     color: var(--color-text);
     font-size: 1rem;
     border: 1px solid var(--color-border-btn);
@@ -106,7 +106,9 @@
     white-space: nowrap;
   }
   .new-chat-btn:hover {
-    filter: brightness(0.9);
+    color: var(--color-bg);
+    background-color: var(--color-text);
+    transition: all 500ms;
   }
   /* Child elements for plus icon and label */
   .btn-icon {
@@ -219,9 +221,9 @@
 
   .chat-window {
     flex: 1;
-    padding: 1rem;
+    padding: 2rem;
     overflow-y: auto; /* Enables scrolling */
-    max-height: 86vh; /* Ensures only this section scrolls */
+    max-height: 84vh; /* Ensures only this section scrolls */
     background-color: var(--color-secondary);
     display: flex;
     flex-direction: column;
@@ -276,9 +278,9 @@
   
   .input-field {
     width: 100%;
-    padding: 10px 50px 10px 10px; /* Right padding for button space */
+    padding: 25px 50px 10px 20px; /* Right padding for button space */
     border: 1px solid #ccc;
-    border-radius: 20px;
+    border-radius: 45px;
     background-color: var(--color-secondary);
     color: var(--color-text);
     resize: none; /* Prevent textarea resizing */
@@ -287,8 +289,8 @@
   
   .send-btn {
     position: absolute;
-    right: 10px;
-    bottom: 9px;
+    right: 12px;
+    bottom: 15px;
     border: none;
     background-color: var(--color-secondary);
     color: var(--color-text);
@@ -299,6 +301,7 @@
   }
   
   .send-btn:hover{
+    transition: all 500ms;
     background-color: var(--color-btn-hover);
   }
 

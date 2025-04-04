@@ -156,7 +156,7 @@ def new_chat():
     try:
         model_name = "llama-3.3-70b-versatile"
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        chat_name = f"New DeveloperAssistant Session {timestamp}"
+        chat_name = f"New Session"
 
         with sqlite3.connect('database.db') as conn:
             cursor = conn.cursor()

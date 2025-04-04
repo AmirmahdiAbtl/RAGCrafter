@@ -28,26 +28,29 @@ modalClose.forEach((mc) => {
         })
     })
 })
-
-/*=============== MIXITUP FILTER PORTFOLIO ===============*/
-var mixerProtfolio = mixitup(".work__container", {
+/*=============== MIXITUP FILTER FOR FORMS ===============*/
+/*=============== MIXITUP FILTER FOR FORMS ===============*/
+var mixerForms = mixitup(".form__container", {
     selectors: {
-        target: '.work__card'
+        target: '.form__section'
     },
     animation: {
         duration: 300
+    },
+    load: {
+        filter: '.form-a' // This will show only Form A on page load
     }
 });
 
-/* Link active work */ 
-const linkWork = document.querySelectorAll(".work__item")
+/* Link active tab */
+const formTabs = document.querySelectorAll(".work__item");
 
-function activeWork(){
-    linkWork.forEach(l =>l.classList.remove("active-work"))
-    this.classList.add("active-work")
+function activeFormTab() {
+    formTabs.forEach(tab => tab.classList.remove("active-work"));
+    this.classList.add("active-work");
 }
-linkWork.forEach(l => l.addEventListener("click", activeWork))
 
+formTabs.forEach(tab => tab.addEventListener("click", activeFormTab));
 /*=============== SWIPER TESTIMONIAL ===============*/
 var swiperTestimonial = new Swiper(".testimonial__container", {
     spaceBetween: 24,
