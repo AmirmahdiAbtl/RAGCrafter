@@ -2,7 +2,6 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: sans-serif;
   }
 
   /* Light theme variables */
@@ -56,13 +55,13 @@
     /* background-color: var(--color-secondary); */
     /* border: 1px solid var(--color-border); */
     width: 300px; /* Default expanded width */
+    max-height: 100vh;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     border-radius: 0.25rem;
     transition: width 0.3s ease;
-    max-height: 99vh;
     position: relative;
   }
 
@@ -123,6 +122,7 @@
 
   /* List of chats area */
   .sidebar-list {
+    max-height: 81vh;
     flex: 1;
     overflow-y: auto;
     list-style: none;
@@ -136,9 +136,8 @@
 
   .sidebar-item {
     padding: 1rem;
-    /* border-bottom: 1px solid var(--color-border); */
+    border-bottom: 1px solid var(--color-border);
     cursor: pointer;
-    font-size: 14px;
     transition: background-color 0.3s;
   }
   .sidebar-item:hover {
@@ -177,50 +176,7 @@
   .toggle-mode-btn:hover {
     background-color: rgba(99, 102, 241, 0.1);
   }
-/* Add these to your existing CSS */
-.code-block {
-  position: relative;
-  margin: 1rem 0;
-  border-radius: 0.5rem;
-  background-color: var(--color-secondary);
-  border: 1px solid var(--color-border);
-  overflow: hidden;
-}
 
-.code-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  background-color: var(--color-border);
-  color: var(--color-text);
-  font-family: monospace;
-  font-size: 0.9rem;
-}
-
-.copy-btn {
-  background-color: var(--color-accent);
-  color: white;
-  border: none;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  font-size: 0.8rem;
-  transition: background-color 0.2s;
-}
-
-.copy-btn:hover {
-  background-color: var(--color-primary);
-}
-
-.code-content {
-  padding: 1rem;
-  font-family: monospace;
-  white-space: pre;
-  overflow-x: auto;
-  background-color: var(--color-bg);
-  color: var(--color-text);
-}
   .dark-icon {
     display: none;
   }
@@ -284,13 +240,14 @@
     white-space: pre-wrap;
   }
   .message-outgoing {
-    background-color: #ededed;
-    color: #000000;
+    white-space: normal;
+    background-color: var(--color-bg);
+    color: var(--color-text);
     align-self: flex-end;
     text-align: right;
   }
   .message-incoming {
-    background-color: var(--color-bg);
+    /* background-color: var(--color-bg); */
     color: var(--color-text);
     align-self: flex-start;
   }
@@ -332,7 +289,99 @@
     resize: none; /* Prevent textarea resizing */
     font-size: 14px;
   }
+  .code-block {
+    position: relative;
+    margin: 1rem 0;
+    border-radius: 0.5rem;
+    background-color: var(--color-secondary);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+  }
+  .markdown-text h1,
+.markdown-text h2,
+.markdown-text h3 {
+  margin: 0.5em 0;
+  font-weight: bold;
+}
+
+.markdown-text p {
+  margin: 0.5em 0;
+}
+
+.markdown-text strong {
+  font-weight: bold;
+}
+
+.markdown-text em {
+  font-style: italic;
+}
+.copy-full-btn {
+  display: block;
+  margin-top: 8px;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 14px;
+  text-align: right;
+  padding: 4px 0;
+  transition: color 0.2s ease;
+}
+
+.copy-full-btn:hover {
+  color: var(--color-accent, #007bff);
+}
+
+.markdown-text code {
+  background-color: var(--color-bg);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.markdown-text a {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+.markdown-text ul {
+  margin-left: 1.2em;
+  list-style: disc;
+}
+  .code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: var(--color-border);
+    color: var(--color-text);
+    font-family: monospace;
+    font-size: 0.9rem;
+  }
   
+  .copy-btn {
+    background-color: var(--color-accent);
+    color: white;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background-color 0.2s;
+  }
+  
+  .copy-btn:hover {
+    background-color: var(--color-primary);
+  }
+  
+  .code-content {
+    padding: 1rem;
+    font-family: monospace;
+    white-space: pre;
+    overflow-x: auto;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+  }
   .send-btn {
     position: absolute;
     right: 12px;

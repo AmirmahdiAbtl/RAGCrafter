@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
   <meta charset="UTF-8" />
   <title>Partial Hide Sidebar With Plus Button & Dynamic Footer Layout</title>
-  <link rel="stylesheet" href="../static/css/stylechat.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/stylechat.css') }}">
 </head>
+
 <body>
   <main class="main-container">
     <!-- Sidebar -->
@@ -24,7 +26,7 @@
       <ul id="sidebarList" class="sidebar-list">
         {% for chat in chats %}
         <li class="sidebar-item" onclick="selectChat({{chat[0]}})">
-          {{ chat[1] }}
+          {{ chat[2] }}
         </li>
         {% endfor %}
       </ul>
@@ -72,6 +74,7 @@
       <div class="input-bar">
         <form onsubmit="sendMessage(event)" class="form-container">
             <label for="userInput" class="input-label"></label>
+            <input type="hidden" name="rag_id" id="hiddenRagId" value="{{ rag_id }}">
             <div class="input-wrapper">
               <textarea
                 id="userInput"
@@ -88,7 +91,9 @@
       </div>
     </section>
   </main>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <script src="{{ url_for('static', filename='js/scriptchat.js') }}"></script>
 
-<script src="../static/js/scriptchat.js"></script>
 </body>
 </html>

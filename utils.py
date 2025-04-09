@@ -1,15 +1,22 @@
 from langchain_huggingface import HuggingFaceEmbeddings
 from config import EMBEDDING_MODEL_NAME, GROQ_API_KEY, LLM_MODEL_NAME
 import os
+import re
+import ollama
 from groq import Groq
-from langchain_community.vectorstores import FAISS
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.vectorstores import FAISS, Chroma
 # from embeddings import get_embedding_model
 from langchain_groq import ChatGroq
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.question_answering import load_qa_chain
 from langchain.chains import LLMChain
 from langchain.chains.conversational_retrieval.prompts import CONDENSE_QUESTION_PROMPT
-import re
+from langchain_community.chat_models import ChatOllama
+from langchain.docstore.document import Document
+from langchain_community.document_loaders import UnstructuredURLLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+        
 def get_embedding():
     return HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
 def generate_embedding(text):
@@ -17,6 +24,54 @@ def generate_embedding(text):
     return embedding_model.embed_query(text)  # or embed_documents([text]) if needed
 
 # FAISS_INDEX_PATH = "faiss_index"
+def create_vectordb(documents, model_name, chunk_size, faiss_index_path):
+    FAISS_INDEX_PATH = "vectorDB/"+faiss_index_path
+    
+    embedding_model = get_embedding()
+    all_documents = []
+    for doc_type, path in documents:
+        try:
+            if doc_type == "link":
+                loader = UnstructuredURLLoader(urls=[path])
+                docs = loader.load()
+            elif doc_type == "pdf":
+                loader = PyPDFLoader(path)
+                docs = loader.load()
+            elif doc_type == "text":
+                with open(path, "r", encoding="utf-8") as file:
+                    content = file.read()
+                    docs = [Document(page_content=content)]
+            else:
+                print(f"Unsupported document type: {doc_type}")
+                continue
+            print(docs)
+            all_documents.extend(docs)
+        
+        except Exception as e:
+            print(f"Failed to load {doc_type}: {path} with error: {e}")
+
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=50)
+    chunked_texts = [chunk for doc in all_documents for chunk in text_splitter.split_text(doc.page_content)]
+
+    
+    if model_name == "faiss":
+        print("Creating FAISS vector store...")
+        vectorstore = FAISS.from_texts(chunked_texts, embedding_model)
+        vectorstore.save_local(FAISS_INDEX_PATH)
+    
+    elif model_name == "chroma":
+        print("Creating Chroma vector store...")
+        vectorstore = Chroma.from_texts(
+            texts=chunked_texts,
+            embedding=embedding_model,
+            persist_directory=FAISS_INDEX_PATH
+        )
+        vectorstore.persist()
+    
+    else:
+        raise ValueError(f"Unsupported vector store type: {model_name}")
+    
+    return vectorstore
 
 def get_or_create_faiss_index(faiss_index_path):
     FAISS_INDEX_PATH = "vectorDB/"+faiss_index_path
@@ -58,25 +113,32 @@ def get_or_create_faiss_index(faiss_index_path):
     
     return vectorstore
 
-def get_llm():
-    """Return a configured ChatGroq LLM instance."""
-    return ChatGroq(
-        model_name=LLM_MODEL_NAME,
-        temperature=0.4,
-        groq_api_key=GROQ_API_KEY
-    )
+def get_llm(model_name, api_key, model_type):
+    if model_type == "GROQ":
+        return ChatGroq(
+            model_name=model_name,
+            temperature=0.4,
+            groq_api_key=api_key
+        )
+    elif model_type == "Ollama":
+        return  ChatOllama(
+            model="deepseek-r1:1.5b",  # Replace with your desired model like 'mistral', 'gemma', etc.
+            temperature=0.4
+        )
 
-def get_retrieval_chain(prompt_template, faiss_index_path = "faiss_index"):
+def get_retrieval_chain(prompt_template, faiss_index_path = "faiss_index", model_name=LLM_MODEL_NAME, api_key = GROQ_API_KEY, model_type="GROQ"):
     vectorstore = get_or_create_faiss_index(faiss_index_path)
     retriever = vectorstore.as_retriever()
     
-    llm = get_llm()
+    llm = get_llm(model_name, api_key, model_type)
+    print(llm)
+    # print(llm.invoke("hellow"))
     
     prompt_template = prompt_template
     # print(prompt_template)
     combine_docs_chain = load_qa_chain(llm, chain_type="stuff", prompt=prompt_template)
     question_generator = LLMChain(llm=llm, prompt=CONDENSE_QUESTION_PROMPT)
-
+    print("Question generator could be found")
     # Define ConversationalRetrievalChain
     retrieval_qa_chain = ConversationalRetrievalChain(
         retriever=retriever,
@@ -84,113 +146,131 @@ def get_retrieval_chain(prompt_template, faiss_index_path = "faiss_index"):
         question_generator=question_generator,
         return_source_documents=True
     )
-    
+    print("Retrieval QA chain could be found", retrieval_qa_chain)
     return retrieval_qa_chain
 
-def summarize_chat_history(chat_history, model="llama3-70b-8192"):
-    """Summarize a conversation with code and markdown, focusing on key code snippets and relevant explanations."""
-    chat_completion = client.chat.completions.create(
-        messages=[
-            {
-                "role": "system",
-                "content": "You are an AI that summarizes conversations involving code and markdown. "
-                           "Extract only the key parts of the model's feedback and response, as well as the user's important markdown, code, hints, and problems. "
-                           "This summary will be used as chat history for the next prompt, so it should focus on what's relevant and useful. "
-                           "You should provide two summaries: one for the user's side, and one for the model's response."
-            },
-            {
-                "role": "user",
-                "content": f"Summarize the conversation (this will be used as chat history for the user's next prompt), extracting only the essential explanations and relevant content:\n\n{chat_history}"
-            }
-        ],
-        model=model,
-        temperature=0.3,  # Lower for consistency
-        top_p=1,
-        stop=None,
-        stream=False,
-    )
-    return chat_completion.choices[0].message.content.strip()
+def prompt_generator_groq(model_type, model_name, app_purpose, doc_detail, api_key = ""):
+    content = (
+                    "You are an AI assistant that helps generate optimized prompt templates for custom RAG (Retrieval-Augmented Generation) applications. "
+                    "The user is building a RAG-based assistant by uploading their own documentation and describing the purpose of their app. Your job is to analyze the user’s stated purpose and the description of the uploaded documents, and generate a reusable prompt template that best aligns with their goals. "
+                    "Your generated prompt should guide an LLM to provide accurate, relevant, and specific answers based solely on the user’s documents.\n\n"
+                    "Focus on:"
+                    "- Capturing the **intent and purpose** of the RAG assistant"
+                    "- Reflecting how the documentation is described (e.g., style, domain, complexity)"
+                    "- Encouraging responses grounded strictly in the uploaded documents"
+                    "- Producing a clear, concise, and effective instruction format that can be reused to answer user questions"
+                   " Avoid:"
+                    "- Including any direct content from the documentation"
+                    "- Over-explaining or adding generic LLM instructions"
+                    "- Making assumptions outside the user’s described purpose or documents"
+                    "Your output should be:"
+                    "- A single user-facing prompt instruction"
+                    "- Focused, role-specific, and aligned with the RAG application’s intended use"
+                    "Example output format:"
+                    """
+                    You are a helpful AI assistant that answers strictly based on the provided documentation. Your job is to help the user understand the content and generate helpful responses. Here's how you should respond:
+                        
+                        - If the user asks about information in the documentation, provide a clear answer based on the material.
+                        - If the user asks for examples, generate helpful examples based on the documentation.
+                        - If the user asks a question that is answered in the documentation or in our previous chat history, respond directly and accurately.
+                        - If the answer can be reasonably inferred, provide a general response grounded in the documentation.
+                        - If the topic is completely unrelated to the documentation, respond with:
+                        *\"I couldn't find that in the provided documentation.\"*
+                        
+                    **OUTPUT** : Only write template nothing more even one word
+                    """
 
-def writter_summarize_chat_history(chat_history, model=LLM_MODEL_NAME):
-    client = Groq(api_key=GROQ_API_KEY)
-    """Summarize a conversation about reviewing and improving Markdown files, focusing on key insights, important user questions, and model suggestions."""
-    
-    chat_completion = client.chat.completions.create(
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are an AI that summarizes conversations involving reviewing and improving Markdown files. "
-                    "Your goal is to create a concise yet detailed summary that preserves important context for future conversations. "
-                    "Ensure the summary includes:\n"
-                    "- The model's suggestions for improvement.\n"
-                    "- Any user questions that may be relevant for future queries.\n"
-                    "- Any critical code or Markdown examples discussed.\n\n"
-                    "Provide two structured summaries:\n"
-                    "1. **User Input Summary**: Capture the user’s key questions, concerns, or Markdown-related issues.\n"
-                    "2. **Model Response Summary**: Include the model’s key suggestions, explanations, and any important insights.\n\n"
-                    "Keep the summary relevant, avoiding unnecessary details, but ensuring all useful information is retained."
                 )
-            },
-            {
-                "role": "user",
-                "content": f"Summarize the conversation (this will be used as chat history for the next prompt), extracting only the essential insights, Markdown issues, and improvement suggestions:\n\n{chat_history}"
-            }
-        ],
-        model=model,
-        temperature=0.5,  # Ensures consistent and concise summaries
-        top_p=1,
-        stop=None,
-        stream=False,
-    )
-    return chat_completion.choices[0].message.content.strip()
-
-def developer_summarize_chat_history(chat_history, model=LLM_MODEL_NAME):
-    client = Groq(api_key=GROQ_API_KEY)
-    """Summarize a conversation about APIs, libraries, and product usage, focusing on key insights, implementation details, and troubleshooting steps."""
-    
-    chat_completion = client.chat.completions.create(
+    if model_type == "GROQ":
+        client = Groq(api_key=api_key)
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": content
+                },
+                {
+                    "role": "user",
+                    "content": f"write a prompt template for RAG Application good fit for this purpose:{app_purpose}, and it's documentation detials : {doc_detail}"
+                }
+            ],
+            model=model_name,
+            temperature=0.3, 
+            top_p=1,
+            stop=None,
+            stream=False,
+        )
+        return chat_completion.choices[0].message.content.strip()
+    elif model_type == "Ollama":
+        chat_completion = ollama.chat(
+        model=model_name,
         messages=[
             {
                 "role": "system",
-                "content": (
-                    "You are an AI that summarizes conversations involving APIs, libraries, and product usage. "
-                    "Your goal is to create a concise yet informative summary that preserves key context for future interactions. "
-                    "Ensure the summary includes:\n"
-                    "- The user's main questions or concerns regarding APIs, libraries, or products.\n"
-                    "- The model’s explanations, suggestions, or troubleshooting steps.\n"
-                    "- Any critical code snippets, configurations, or implementation details discussed.\n\n"
-                    "Provide two structured summaries:\n"
-                    "1. **User Input Summary**: Capture the user's key questions, challenges, or implementation goals.\n"
-                    "2. **Model Response Summary**: Summarize the model’s key insights, explanations, and suggested solutions.\n\n"
-                    "Keep the summary focused and relevant, ensuring all useful information is retained while avoiding unnecessary details."
-                )
+                "content": content
             },
             {
                 "role": "user",
-                "content": f"Summarize the conversation (this will be used as chat history for the next prompt), extracting only the essential insights, API/library/product-related questions, and troubleshooting guidance:\n\n{chat_history}"
+                "content": f"write a prompt template for RAG Application good fit for this purpose: {app_purpose}, and it's documentation details: {doc_detail}"
             }
-        ],
-        model=model,
-        temperature=0.5,  # Ensures consistent and concise summaries
-        top_p=1,
-        stop=None,
-        stream=False,
-    )
-    return chat_completion.choices[0].message.content.strip()
-
-def extract_markdown_sections(text):
-    """
-    Searches for Markdown between [[MARKDOWN_START]] and [[MARKDOWN_END]] tags.
-    Returns a list of markdown sections.
-    """
-    pattern = r"\[\[MARKDOWN_START\]\](.*?)\[\[MARKDOWN_END\]\]"
-    matches = re.findall(pattern, text, flags=re.DOTALL)
-    if matches:
-        print("Found")
-        return matches
-    else:
-        print("Not Found")
-        return ""
+        ]
+        )
+        res = chat_completion['message']['content'].strip()
+        match = re.search(r"</think>(.*)", res, re.DOTALL)
+        if match:
+            after_think = match.group(1).split()
+            return after_think
+        else:
+            return res
 
 
+def name_generator(model_type, model_name, first_prompt, api_key = ""):
+    content = (
+        "You are an AI assistant that helps generate short name for the season chat"
+        "The user is building a RAG-based assistant by uploading their own documentation and describing the purpose of their app. Your job is to analyze the user’s first prompt request and give a meaningful name for it's chat season"
+        "Your generated name should be meaningful and short at least 4 words"
+        """
+            **OUTPUT** : Only write a short name (at least 4 words)
+        """
+    )   
+    if model_type == "GROQ":
+        client = Groq(api_key=api_key)
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": content
+                },
+                {
+                    "role": "user",
+                    "content": f"suggest meaningful name for chat season regarding this first prompt request that user wrote :{first_prompt}, in at least 4 words"
+                }
+            ],
+            model=model_name,
+            temperature=0.3, 
+            top_p=1,
+            stop=None,
+            stream=False,
+        )
+        return chat_completion.choices[0].message.content.strip()
+    elif model_type == "Ollama":
+        chat_completion = ollama.chat(
+        model=model_name,
+        messages=[
+            {
+                "role": "system",
+                "content": content
+            },
+            {
+                "role": "user",
+                "content": f"suggest meaningful name for chat season regarding this first prompt request that user wrote :{first_prompt}, in at least 4 words"
+            }
+        ]
+        )
+        res = chat_completion['message']['content'].strip()
+        match = re.search(r"</think>(.*)", res, re.DOTALL)
+        if match:
+            after_think = match.group(1).split()
+            return after_think
+        else:
+            return res
