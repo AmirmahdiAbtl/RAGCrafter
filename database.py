@@ -72,6 +72,15 @@ def init_db():
         ''')
 
         conn.commit()
+        cursor = conn.cursor()
+    
+        # Create your tables (example with a 'rags' table)
+        cursor.execute(
+                        '''INSERT INTO rag (id, name)
+                           VALUES (?, ?)''',
+                        (0, "Regular")
+                    )
+        conn.commit()
 
 def get_all_rags():
     """Get all RAG applications from the database"""

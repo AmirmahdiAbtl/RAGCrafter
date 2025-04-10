@@ -6,15 +6,15 @@
 
         <!--=============== FAVICON ===============-->
         <!--=============== FAVICON ===============-->
-    <link rel="shortcut icon" href="{{ url_for('static', filename='img/icond.png') }}" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <!--=============== BOXICONS ===============-->
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+        <link rel="shortcut icon" href="{{ url_for('static', filename='img/icond.png') }}" type="image/x-icon">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <!--=============== BOXICONS ===============-->
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
-    <!--=============== SWIPER CSS ===============-->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/swiper-bundle.min.css') }}">
-    <!--=============== CSS ===============-->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+        <!--=============== SWIPER CSS ===============-->
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/swiper-bundle.min.css') }}">
+        <!--=============== CSS ===============-->
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     
     </head>
     <title>RAGCraft</title>
@@ -84,38 +84,61 @@
             
         <div class="work__container container grid" id="MixItUp41FB2B" style="">    
         </main>
-        
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                document.querySelectorAll('.nav__link').forEach(anchor => {
-                    anchor.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        
-                        const targetId = this.getAttribute('href').substring(1); // Get section ID from href
-                        const targetSection = document.getElementById(targetId);
-                        
-                        // Fallback if smooth scroll behavior isn't natively supported
-                        targetSection.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                    });
-                });
-            });
-        </script>
-            
-        <!--=============== SCROLLREVEAL ===============-->
-        <script src="./static/js/scrollreveal.min.js'"></script>
-
-        <!--=============== SWIPER JS ===============-->
-        <script src="./static/js/swiper-bundle.min.js"></script>
-
-        <!--=============== MIXITUP FILTER ===============-->
-        <script src="./static/js/mixitup.min.js"></script>
-
-        <!--=============== MAIN JS ===============-->
-        <script src="./static/js/main.js"></script>
-        <script src="./static/js/scriptchat.js"></script>
-        
     </body>
+    <script>
+        /*=============== SCROLL SECTIONS ACTIVE LINK ===============*/
+        const sections = document.querySelectorAll('section[id]')
+            
+            const scrollActive = () => {
+                const scrollY = window.pageYOffset
+            
+                sections.forEach(current => {
+                    const sectionHeight = current.offsetHeight,
+                        sectionTop = current.offsetTop - 58,
+                        sectionId = current.getAttribute('id'),
+                        sectionsClass = document.querySelector('.nav__menu a[href="#' + sectionId + '"]')
+            
+                    if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
+                        sectionsClass.classList.add('active-link')
+                    } else {
+                        // Check if sectionsClass is not null before attempting to remove the class
+                        if (sectionsClass) {
+                            sectionsClass.classList.remove('active-link')
+                        }
+                    }
+                })
+            }
+            
+            window.addEventListener('scroll', scrollActive)
+            /*=============== LIGHT DARK THEME ===============*/ 
+            const themeButton = document.getElementById('theme-button')
+            const lightTheme = 'light-theme'
+            const iconTheme = 'bx-sun'
+            
+            // Previously selected topic (if user selected)
+            const selectedTheme = localStorage.getItem('selected-theme')
+            const selectedIcon = localStorage.getItem('selected-icon')
+            
+            // We obtain the current theme that the interface has by validating the dark-theme class
+            const getCurrentTheme = () => document.body.classList.contains(lightTheme) ? 'dark' : 'light'
+            const getCurrentIcon = () => themeButton.classList.contains(iconTheme) ? 'bx bx-moon' : 'bx bx-sun'
+            
+            // We validate if the user previously chose a topic
+            if (selectedTheme) {
+            // If the validation is fulfilled, we ask what the issue was to know if we activated or deactivated the dark
+            document.body.classList[selectedTheme === 'dark' ? 'add' : 'remove'](lightTheme)
+            themeButton.classList[selectedIcon === 'bx bx-moon' ? 'add' : 'remove'](iconTheme)
+            }
+            
+            // Activate / deactivate the theme manually with the button
+            themeButton.addEventListener('click', () => {
+                // Add or remove the dark / icon theme
+                document.body.classList.toggle(lightTheme)
+                themeButton.classList.toggle(iconTheme)
+                // We save the theme and the current icon that the user chose
+                localStorage.setItem('selected-theme', getCurrentTheme())
+                localStorage.setItem('selected-icon', getCurrentIcon())
+            })
+    
+    </script>
 </html>
