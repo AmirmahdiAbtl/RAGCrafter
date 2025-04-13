@@ -3,8 +3,8 @@
 
 # Ignore dependencies and logs
 uploads/
-
+vectordb/
 
 # Ignore system files
-database.py,
+database.db,
 openapi.yaml

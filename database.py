@@ -3,6 +3,27 @@ import sqlite3
 def init_db():
     with sqlite3.connect('database.db') as conn:
         cursor = conn.cursor()
+        # Regular Chat Database
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS regular_chat_season (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                language_model TEXT NOT NULL,
+                start_chat TEXT NOT NULL
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS regular_chat_detail (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                chat_id INTEGER NOT NULL,
+                prompt TEXT NOT NULL,
+                chat_response TEXT NOT NULL,
+                embedding BLOB NOT NULL,
+                time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (chat_id) REFERENCES chat_season(id) ON DELETE CASCADE
+            )
+        ''')
 
         # Main RAG project table
         cursor.execute('''
@@ -70,16 +91,8 @@ def init_db():
                 FOREIGN KEY (chat_id) REFERENCES chat_season(id) ON DELETE CASCADE
             )
         ''')
+        
 
-        conn.commit()
-        cursor = conn.cursor()
-    
-        # Create your tables (example with a 'rags' table)
-        cursor.execute(
-                        '''INSERT INTO rag (id, name)
-                           VALUES (?, ?)''',
-                        (0, "Regular")
-                    )
         conn.commit()
 
 def get_all_rags():
