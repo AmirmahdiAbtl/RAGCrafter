@@ -76,22 +76,22 @@ RAG Crafter is built with Flask and provides a complete ecosystem for:
 
 ```
 RAG-Crafter/
-├── app.py                 # Main Flask application
-├── database.py            # Database operations and models
-├── requirements.txt       # Project dependencies
-├── static/                # Static assets
-│   ├── css/              # Stylesheets
-│   │   ├── styles.css    # Main styles
-│   │   └── dark-theme.css # Dark mode styles
-│   ├── js/               # JavaScript files
-│   │   ├── main.js       # Main application logic
-│   │   ├── scriptchat.js # Chat functionality
-│   │   └── theme.js      # Theme management
-│   └── img/              # Images and icons
-└── templates/            # HTML templates
-    ├── index.html        # Landing page
-    ├── panel.html        # Main dashboard
-    └── developerassistant.html  # Chat interface
+├── app.py           
+├── database.py         
+├── requirements.txt      
+├── static/               
+│   ├── css/             
+│   │   ├── styles.css   
+│   │   └── dark-theme.css
+│   ├── js/              
+│   │   ├── main.js      
+│   │   ├── scriptchat.js 
+│   │   └── theme.js     
+│   └── img/        
+└── templates/           
+    ├── index.html     
+    ├── panel.html     
+    └── developerassistant.html 
 ```
 
 ## 🚀 Getting Started
@@ -99,14 +99,14 @@ RAG-Crafter/
 ### Prerequisites
 - Python 3.8 or higher
 - pip (Python package manager)
-- SQLite (included with Python)
-- OpenAI API key (for language model access)
+- SQL (included with Python)
+- OpenAI API key (for language model access) / Ollama Model / Groq Api key
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-git clone [your-repository-url]
+git clone https://github.com/AmirmahdiAbtl/RAGCrafter/
 cd RAG-Crafter
 ```
 
@@ -126,17 +126,15 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. Set up environment variables:
-Create a `.env` file in the project root with:
-```
-OPENAI_API_KEY=your_api_key_here
-```
 
 ### Running the Application
 
 1. Start the Flask server:
 ```bash
 python app.py
+
+## But its better to use this command because of auto reloading
+flask run --no-reload
 ```
 
 2. Access the application:
@@ -154,7 +152,8 @@ Open your browser and navigate to `http://localhost:5000`
    - Set chunk size and overlap
    - Configure vector database
 4. Upload your documents
-5. Start the RAG creation process
+5. Suggest you the best prompts you need
+6. Congradulate you can now start talking with your RAG model
 
 ### Using the Chat Interface
 
@@ -174,10 +173,6 @@ Open your browser and navigate to `http://localhost:5000`
 
 ## 🔧 Configuration
 
-### Environment Variables
-- `OPENAI_API_KEY`: Your OpenAI API key
-- `FLASK_ENV`: Development or production environment
-- `DATABASE_URL`: Database connection string
 
 ### Custom Settings
 - Model parameters
